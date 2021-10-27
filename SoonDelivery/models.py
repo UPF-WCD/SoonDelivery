@@ -9,7 +9,8 @@ class Test(models.Model):
         return self.text
 
 class User(AbstractUser):
-    school_email = models.TextField(max_length=50, default='')
+    school_email = models.CharField(max_length=50, default='')
+    is_active = models.BooleanField(default=False)
 
 class Check_list(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
