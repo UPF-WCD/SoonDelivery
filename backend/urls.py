@@ -34,7 +34,7 @@ urlpatterns = [
     url("^a/login/$", views.LoginAPI.as_view()),
     url("^auth/user/$", views.UserAPI.as_view()),
     url('a/logout/', knox_views.LogoutView.as_view(), name='knox_logout'),
-    path('/activate/<str:uid64>/<str:token>',views.Activate.as_view()),
+    path('activate/<str:uidb64>/<str:token>',views.Activate.as_view()),
 
 
     path('', views.check_list),

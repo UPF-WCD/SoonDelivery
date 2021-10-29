@@ -29,7 +29,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes,force_text
-
+from django.contrib.sites.models import Site
 
 class TestView(viewsets.ModelViewSet):
     serializer_class = TestSerializer
@@ -50,12 +50,19 @@ class RegistrationAPI(generics.GenericAPIView):
         #     if User.objects.filter(school_email=datas["school_email"]).exists():
         #         return JsonResponse({"message" : "EXIST_EMAIL"}, status=400)
             serializer = self.get_serializer(data=request.data)
-            print(request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
 
-            current_site = get_current_site(request.get_host())
-            domain = current_site.domain
+            host = request.get_host()
+            full_path = request.get_full_path()
+            print(host+full_path)
+
+            current_site = request.get_full_path_info()
+            current_site = get_current_site(current_site)
+            print(request.get_full_path_info())
+
+            # domain = current_site.domain
+            domain = 'localhost:8000'
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = accout_activation_token.make_token(user)
             message_data = message(domain, uidb64, token)
@@ -86,14 +93,15 @@ class RegistrationAPI(generics.GenericAPIView):
 class Activate(View):
     def get(self, request, uidb64, token):
         try:
-            uid = force_text(urlsafe_base64_decode(uidb64.encode('utf-8')))
+            # uid = force_text(urlsafe_base64_decode(uidb64.encode('utf-8')))
+            uid = force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk = uid)
 
             if accout_activation_token.check_token(user, token):
                 user.is_active = True
                 user.save()
-                return redirect('http://google.com')
-            return Response(user.school_email + ' 계정이 활성화되었습니다.',status=status.HTTP_200_OK)
+                return HttpResponse(' 계정이 활성화되었습니다.',status=status.HTTP_200_OK)
+            return redirect('http://google.com') 
         except ValidationError:
             return JsonResponse({"message":"TYPE_ERROR"}, status=400)
         except KeyError:
